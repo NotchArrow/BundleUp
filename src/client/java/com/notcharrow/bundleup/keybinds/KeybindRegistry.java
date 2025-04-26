@@ -10,7 +10,7 @@ public class KeybindRegistry {
 	public static void registerKeybinds() {
 		bundleKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
 				"key.bundle-up.bundleKeybind",
-				InputUtil.UNKNOWN_KEY.getCode(),
+				InputUtil.GLFW_KEY_B,
 				"category.bundle-up"));
 	}
 }
