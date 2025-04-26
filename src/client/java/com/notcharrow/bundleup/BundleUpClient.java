@@ -1,10 +1,13 @@
 package com.notcharrow.bundleup;
 
+import com.notcharrow.bundleup.keybinds.BundleKeybind;
+import com.notcharrow.bundleup.keybinds.KeybindRegistry;
 import net.fabricmc.api.ClientModInitializer;
 
 public class BundleUpClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
+		KeybindRegistry.registerKeybinds();
+		BundleKeybind.register();
 	}
 }
