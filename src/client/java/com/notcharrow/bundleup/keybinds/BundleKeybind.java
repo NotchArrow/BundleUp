@@ -104,7 +104,7 @@ public class BundleKeybind {
 				bundleSlot += 36;
 			}
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot, 0, SlotActionType.PICKUP, client.player);
-			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 1, SlotActionType.PICKUP, client.player);
+			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 0, SlotActionType.PICKUP, client.player);
 		}
 	}
 }
