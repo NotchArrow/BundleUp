@@ -36,7 +36,7 @@ public class BundleKeybind {
 							if (stack.getItem() instanceof BundleItem) {
 								bundleSlots.put(slot, (int) (64 - BundleItem.getAmountFilled(stack)));
 							} else {
-								if (getSpacePerItem(inventory.getStack(slot)) != 64) {
+								if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
 									spaceRequirements.put(slot, getSpaceTaken(stack));
 								}
 							}
