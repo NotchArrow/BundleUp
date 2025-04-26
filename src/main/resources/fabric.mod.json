@@ -11,7 +11,7 @@
 		"homepage": "https://github.com/NotchArrow/BundleUp",
 		"sources": "https://github.com/NotchArrow/BundleUp"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/bundle-up/icon.png",
 	"environment": "*",
 	"entrypoints": {
