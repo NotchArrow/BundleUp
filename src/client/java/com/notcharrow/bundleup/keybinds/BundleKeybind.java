@@ -116,7 +116,6 @@ public class BundleKeybind {
 							} else {
 								bundleSlots.put(slot + chestInventory.size() - 9, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
 							}
-							System.out.println(bundleSlots);
 						} else if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
 							spaceRequirements.put(slot + chestInventory.size() - 9, getSpaceTaken(stack));
 						}
@@ -147,8 +146,6 @@ public class BundleKeybind {
 		if (client.player != null && client.interactionManager != null) {
 
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot, 0, SlotActionType.PICKUP, client.player);
-			System.out.println("ItemSlot: " + itemSlot);
-			System.out.println("BundleSlot: " + bundleSlot);
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 0, SlotActionType.PICKUP, client.player);
 		}
 	}
@@ -174,15 +171,9 @@ public class BundleKeybind {
 
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot,
 					0, SlotActionType.PICKUP, client.player);
-			System.out.println("ItemSlot: " + itemSlot);
 			for (Map.Entry<Integer, Integer> entry : bundleSlots.entrySet()) {
-				System.out.println(bundleSlots);
-				System.out.println(spacePerItem);
-				System.out.println(entry.getValue());
 				if (entry.getValue() >= spacePerItem) {
 					int bundleSlot = entry.getKey();
-					System.out.println("ItemSlot: " + itemSlot);
-					System.out.println("BundleSlot: " + bundleSlot);
 					client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot,
 							0, SlotActionType.PICKUP, client.player);
 					bundledItems = true;
