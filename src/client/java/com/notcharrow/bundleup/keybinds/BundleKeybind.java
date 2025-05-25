@@ -6,8 +6,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.BundleItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.HashMap;
@@ -23,7 +25,8 @@ public class BundleKeybind {
 	public static void register() {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (client.player != null && client.interactionManager != null
-					&& client.currentScreen instanceof InventoryScreen) {
+					&& (client.currentScreen instanceof InventoryScreen
+						|| client.player.currentScreenHandler instanceof GenericContainerScreenHandler)) {
 				if (InputUtil.isKeyPressed(client.getWindow().getHandle(),
 						KeyBindingHelper.getBoundKeyOf(KeybindRegistry.bundleKeybind).getCode())
 				&& !pressed) {
@@ -80,14 +83,42 @@ public class BundleKeybind {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.player != null) {
 			PlayerInventory inventory = client.player.getInventory();
-			for (int slot = 0; slot < inventory.size(); slot++) {
-				ItemStack stack = inventory.getStack(slot);
-				if (!stack.isEmpty()) {
-					if (stack.getItem() instanceof BundleItem) {
-						bundleSlots.put(slot, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
-					} else {
-						if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
+			if (client.currentScreen instanceof InventoryScreen) {
+				for (int slot = 0; slot < inventory.size(); slot++) {
+					ItemStack stack = inventory.getStack(slot);
+					if (!stack.isEmpty()) {
+						if (stack.getItem() instanceof BundleItem) {
+							bundleSlots.put(slot, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+						} else if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
+								spaceRequirements.put(slot, getSpaceTaken(stack));
+						}
+					}
+				}
+			} else if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
+				Inventory chestInventory = containerHandler.getInventory();
+
+				for (int slot = 0; slot < chestInventory.size(); slot++) {
+					ItemStack stack = chestInventory.getStack(slot);
+					if (!stack.isEmpty()) {
+						if (stack.getItem() instanceof BundleItem) {
+							bundleSlots.put(slot, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+						} else if (getSpacePerItem(chestInventory.getStack(slot)) != 64) {
 							spaceRequirements.put(slot, getSpaceTaken(stack));
+						}
+					}
+				}
+				for (int slot = 0; slot < inventory.size(); slot++) {
+					ItemStack stack = inventory.getStack(slot);
+					if (!stack.isEmpty()) {
+						if (stack.getItem() instanceof BundleItem) {
+							if (slot < 9) {
+								bundleSlots.put(slot + chestInventory.size() + 27, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+							} else {
+								bundleSlots.put(slot + chestInventory.size() - 9, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+							}
+							System.out.println(bundleSlots);
+						} else if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
+							spaceRequirements.put(slot + chestInventory.size() - 9, getSpaceTaken(stack));
 						}
 					}
 				}
@@ -114,13 +145,10 @@ public class BundleKeybind {
 	private static void storeItems(int itemSlot, int bundleSlot) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.player != null && client.interactionManager != null) {
-			if (itemSlot < 9) {
-				itemSlot += 36;
-			}
-			if (bundleSlot < 9) {
-				bundleSlot += 36;
-			}
+
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot, 0, SlotActionType.PICKUP, client.player);
+			System.out.println("ItemSlot: " + itemSlot);
+			System.out.println("BundleSlot: " + bundleSlot);
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 0, SlotActionType.PICKUP, client.player);
 		}
 	}
@@ -130,17 +158,31 @@ public class BundleKeybind {
 
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.player != null && client.interactionManager != null) {
+
+			int spacePerItem;
 			PlayerInventory inventory = client.player.getInventory();
-			int spacePerItem = getSpacePerItem(inventory.getStack(itemSlot));
+			if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
+				Inventory chestInventory = containerHandler.getInventory();
+				if (itemSlot < chestInventory.size()) {
+					spacePerItem = getSpacePerItem(chestInventory.getStack(itemSlot));
+				} else {
+					spacePerItem = getSpacePerItem(inventory.getStack(itemSlot - chestInventory.size() + 9));
+				}
+			} else {
+				spacePerItem = getSpacePerItem(inventory.getStack(itemSlot));
+			}
 
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot,
 					0, SlotActionType.PICKUP, client.player);
+			System.out.println("ItemSlot: " + itemSlot);
 			for (Map.Entry<Integer, Integer> entry : bundleSlots.entrySet()) {
+				System.out.println(bundleSlots);
+				System.out.println(spacePerItem);
+				System.out.println(entry.getValue());
 				if (entry.getValue() >= spacePerItem) {
 					int bundleSlot = entry.getKey();
-					if (bundleSlot < 9) {
-						bundleSlot += 36;
-					}
+					System.out.println("ItemSlot: " + itemSlot);
+					System.out.println("BundleSlot: " + bundleSlot);
 					client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot,
 							0, SlotActionType.PICKUP, client.player);
 					bundledItems = true;
