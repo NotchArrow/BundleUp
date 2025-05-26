@@ -3,6 +3,6 @@
 
 A simple and lightweight Fabric mod designed to do one thing, put your items into bundles! **Open your inventory** and press the keybind **Default: B** to store your items. It does not pull unstackable items or anything from the hotbar. Priority goes to items that will take the least space in the bundle, **freeing the most inventory space possible**.
 
-**As of v1.1.0**, the mod fully supports chests and their varients. Shulkers are coded differently but support will be coming soon.
+**As of v1.1.0**, the mod fully supports chests and their variants. Shulkers are coded differently but support will be coming soon.
 
 # [Discord](https://discord.gg/ZCaGkZeb4C)
