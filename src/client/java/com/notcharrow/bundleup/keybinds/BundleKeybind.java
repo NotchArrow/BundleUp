@@ -1,5 +1,6 @@
 package com.notcharrow.bundleup.keybinds;
 
+import com.notcharrow.bundleup.mixin.ShulkerBoxScreenHandlerAccessor;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
@@ -10,6 +11,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.BundleItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.ShulkerBoxScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
 import java.util.HashMap;
@@ -26,7 +28,8 @@ public class BundleKeybind {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (client.player != null && client.interactionManager != null
 					&& (client.currentScreen instanceof InventoryScreen
-						|| client.player.currentScreenHandler instanceof GenericContainerScreenHandler)) {
+						|| client.player.currentScreenHandler instanceof GenericContainerScreenHandler
+						|| client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler)) {
 				if (InputUtil.isKeyPressed(client.getWindow().getHandle(),
 						KeyBindingHelper.getBoundKeyOf(KeybindRegistry.bundleKeybind).getCode())
 				&& !pressed) {
@@ -88,14 +91,25 @@ public class BundleKeybind {
 					ItemStack stack = inventory.getStack(slot);
 					if (!stack.isEmpty()) {
 						if (stack.getItem() instanceof BundleItem) {
-							bundleSlots.put(slot, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+							if (slot <= 9) {
+								bundleSlots.put(slot + 36, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+							} else {
+								bundleSlots.put(slot, (int) (64 - (BundleItem.getAmountFilled(stack) * 64)));
+							}
 						} else if (getSpacePerItem(inventory.getStack(slot)) != 64 && slot >= 9) {
 								spaceRequirements.put(slot, getSpaceTaken(stack));
 						}
 					}
 				}
-			} else if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
-				Inventory chestInventory = containerHandler.getInventory();
+			} else if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler
+					|| client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler) {
+				Inventory chestInventory = null;
+				if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
+					chestInventory = containerHandler.getInventory();
+				} else if (client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler containerHandler) {
+					chestInventory = ((ShulkerBoxScreenHandlerAccessor) containerHandler).getInventory();
+				}
+
 
 				for (int slot = 0; slot < chestInventory.size(); slot++) {
 					ItemStack stack = chestInventory.getStack(slot);
@@ -146,6 +160,7 @@ public class BundleKeybind {
 		if (client.player != null && client.interactionManager != null) {
 
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot, 0, SlotActionType.PICKUP, client.player);
+			System.out.println(bundleSlot);
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 0, SlotActionType.PICKUP, client.player);
 		}
 	}
@@ -158,8 +173,14 @@ public class BundleKeybind {
 
 			int spacePerItem;
 			PlayerInventory inventory = client.player.getInventory();
-			if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
-				Inventory chestInventory = containerHandler.getInventory();
+			if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler
+					|| client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler) {
+				Inventory chestInventory = null;
+				if (client.player.currentScreenHandler instanceof GenericContainerScreenHandler containerHandler) {
+					chestInventory = containerHandler.getInventory();
+				} else if (client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler containerHandler) {
+					chestInventory = ((ShulkerBoxScreenHandlerAccessor) containerHandler).getInventory();
+				}
 				if (itemSlot < chestInventory.size()) {
 					spacePerItem = getSpacePerItem(chestInventory.getStack(itemSlot));
 				} else {
