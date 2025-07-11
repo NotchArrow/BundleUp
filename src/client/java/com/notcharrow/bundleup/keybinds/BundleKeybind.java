@@ -5,6 +5,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -13,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ShulkerBoxScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.sound.SoundEvents;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +37,7 @@ public class BundleKeybind {
 						KeyBindingHelper.getBoundKeyOf(KeybindRegistry.bundleKeybind).getCode())
 				&& !pressed) {
 					pressed = true;
+					client.player.playSound(SoundEvents.ITEM_BUNDLE_INSERT);
 
 					updateMaps();
 
@@ -160,7 +164,6 @@ public class BundleKeybind {
 		if (client.player != null && client.interactionManager != null) {
 
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, itemSlot, 0, SlotActionType.PICKUP, client.player);
-			System.out.println(bundleSlot);
 			client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, bundleSlot, 0, SlotActionType.PICKUP, client.player);
 		}
 	}
