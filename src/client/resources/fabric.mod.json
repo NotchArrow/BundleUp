@@ -25,15 +25,22 @@
 	"entrypoints": {
 		"client": [
 			"com.notcharrow.bundleup.BundleUpClient"
-		]
+		],
+        "modmenu": [
+            "com.notcharrow.bundleup.config.BundleUpModMenu"
+        ]
 	},
+    "mixins": [
+    "bundleup.mixins.json"
+    ],
 	"depends": {
 		"fabricloader": ">=0.16.10",
 		"minecraft": ">=1.21.4 <=1.21.8",
 		"java": ">=21",
 		"fabric-api": "*"
 	},
-	"mixins": [
-		"bundleup.mixins.json"
-	]
+    "suggests" : {
+      "cloth-config": "*",
+      "modmenu": "*"
+    }
 }
