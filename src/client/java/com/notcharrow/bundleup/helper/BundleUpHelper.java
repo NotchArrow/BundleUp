@@ -6,7 +6,10 @@ import com.notcharrow.bundleup.mixin.ShulkerBoxScreenHandlerAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.component.ComponentHolder;
+import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.BundleContentsComponent;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.BundleItem;
@@ -19,15 +22,47 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ShulkerBoxScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class BundleUpHelper {
 	public static Map<Item, Integer> getBundleContents(ItemStack bundleStack) {
 		Map<Item, Integer> bundleContents = new HashMap<>();
 
+		BundleContentsComponent bundleContentsComponent;
+
+		/*
+		 ItemStack.get method changes between 1.21.4-1.21.8
+		 https://tinyurl.com/ItemStackGetWorkaround
+		 */
+
+		try {
+			bundleContentsComponent = bundleStack.get(DataComponentTypes.BUNDLE_CONTENTS);
+		} catch (NoSuchMethodError ignored) {
+			Method get;
+			try {
+				// prod env
+				get = ComponentHolder.class.getMethod("method_57824", ComponentType.class);
+			} catch (NoSuchMethodException e) {
+				//  devenv
+				try {
+					get = ComponentHolder.class.getMethod("get", ComponentType.class);
+				} catch (NoSuchMethodException ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+			get.setAccessible(true);
+			try {
+				bundleContentsComponent = (BundleContentsComponent) get.invoke(bundleStack, DataComponentTypes.BUNDLE_CONTENTS);
+			} catch (IllegalAccessException | InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
 		if (bundleStack.isIn(ItemTags.BUNDLES))	{
-			if (bundleStack.get(DataComponentTypes.BUNDLE_CONTENTS) != null) {
-				for (ItemStack stack : bundleStack.get(DataComponentTypes.BUNDLE_CONTENTS).iterate()) {
+			if (bundleContentsComponent != null) {
+				for (ItemStack stack : bundleContentsComponent.iterate()) {
 					bundleContents.put(stack.getItem(), stack.getCount());
 				}
 			}
