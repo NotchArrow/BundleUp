@@ -33,6 +33,12 @@ public class BundleUpModMenu implements ModMenuApi {
 					.setSaveConsumer(newValue -> ConfigManager.config.itemListMode = newValue)
 					.build());
 
+			// mode selector (normal/sort)
+			general.addEntry(entryBuilder.startEnumSelector(Text.literal("Bundle Default Behavior"),
+							BundleUpConfig.BundleSortMode.class, ConfigManager.config.bundleSortMode)
+					.setSaveConsumer(newValue -> ConfigManager.config.bundleSortMode = newValue)
+					.build());
+
 			// item list (string list)
 			general.addEntry(entryBuilder.startStrList(Text.literal("Item ID List"), ConfigManager.config.items)
 					.setDefaultValue(List.of())

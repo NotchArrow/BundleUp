@@ -1,5 +1,7 @@
 package com.notcharrow.bundleup.keybinds;
 
+import com.notcharrow.bundleup.config.BundleUpConfig;
+import com.notcharrow.bundleup.config.ConfigManager;
 import com.notcharrow.bundleup.helper.BundleUpHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -7,20 +9,19 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.BundleItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ShulkerBoxScreenHandler;
 import net.minecraft.sound.SoundEvents;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class BundleKeybind {
 	private static int previousSlot = -1;
 	private static boolean pressed = false;
+	private static boolean sorting = false;
 
 	public static void register() {
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -42,33 +43,55 @@ public class BundleKeybind {
 					Map<Integer, Integer> spaces = BundleUpHelper.getSpaces(bundles); // slot, bundleSpace
 					Map<Integer, Integer> spaceRequirements = BundleUpHelper.getSpaceRequirements(items); // slot, spaceRequirement
 
-					// Sorting Mode
 					if (Screen.hasShiftDown()) {
-						for (Map.Entry<Integer, Integer> bundle : spaces.entrySet()) {
-							int bundleSlot = bundle.getKey();
-							int spaceLeft = spaces.get(bundleSlot);
+						sorting = ConfigManager.config.bundleSortMode == BundleUpConfig.BundleSortMode.NORMAL;
+					} else {
+						sorting = ConfigManager.config.bundleSortMode != BundleUpConfig.BundleSortMode.NORMAL;
+					}
+
+					// Sorting Mode
+					if (sorting) {
+						List<Map.Entry<Integer, Integer>> spaceRequirementsList =
+								spaceRequirements.entrySet().stream()
+										.sorted(Map.Entry.comparingByValue())
+										.toList();
+
+						for (Map.Entry<Integer, Integer> itemEntry: spaceRequirementsList) {
+
 							maps = BundleUpHelper.updateMaps(inventory);
-							maps.removeFirst();
-							items = maps.removeFirst(); // slot, itemStack
-							spaceRequirements = BundleUpHelper.getSpaceRequirements(items); // slot, spaceRequirement
+							bundles = maps.removeFirst(); // slot, bundleStack
+							spaces = BundleUpHelper.getSpaces(bundles); // slot, bundleSpace
 
-							Map<Item, Integer> bundleContents = BundleUpHelper.getBundleContents(bundles.get(bundleSlot));
-							Set<Item> itemSet = bundleContents.keySet();
+							int itemSlot = itemEntry.getKey();
+							ItemStack itemStack = items.get(itemSlot);
+							int spacePerItem = BundleUpHelper.getSpacePerItem(itemStack);
+							int spaceRequirement = itemEntry.getValue();
 
-							for (Map.Entry<Integer, ItemStack> entry : items.entrySet()) {
-								int itemSlot = entry.getKey();
-								if (itemSet.contains(entry.getValue().getItem())
-									&& spaceRequirements.get(itemSlot) <= spaceLeft) {
-									BundleUpHelper.clickSlot(itemSlot);
-									BundleUpHelper.clickSlot(bundleSlot);
-									spaceLeft -= spaceRequirements.get(itemSlot);
+							List<Integer> suitableSpaces = new ArrayList<>();
+							int totalSpace = 0;
+							for (Map.Entry<Integer, Integer> bundleEntry : spaces.entrySet()) {
+								ItemStack bundle = bundles.get(bundleEntry.getKey());
+								if (BundleUpHelper.getBundleContents(bundle).containsKey(itemStack.getItem())) {
+									suitableSpaces.add(bundleEntry.getKey());
+									totalSpace += bundleEntry.getValue();
+								}
+							}
+
+							if (totalSpace > spaceRequirement) {
+								BundleUpHelper.clickSlot(itemSlot);
+								for (int bundleSlot: suitableSpaces) {
+									if (spaceRequirement > 0) {
+										BundleUpHelper.clickSlot(bundleSlot);
+									}
+									spaceRequirement -= (spaces.get(bundleSlot) / spacePerItem) * spacePerItem;
 								}
 							}
 						}
 					}
 
 					// Normal Mode
-					while (BundleUpHelper.getTotalSpace(spaces) > 0 && !spaceRequirements.isEmpty() && !Screen.hasShiftDown()) {
+					while (BundleUpHelper.getTotalSpace(spaces) > 0 && !spaceRequirements.isEmpty()
+							&& !sorting) {
 
 						maps = BundleUpHelper.updateMaps(inventory);
 						bundles = maps.removeFirst(); // slot, bundleStack
