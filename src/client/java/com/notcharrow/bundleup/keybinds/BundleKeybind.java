@@ -5,12 +5,9 @@ import com.notcharrow.bundleup.config.ConfigManager;
 import com.notcharrow.bundleup.helper.BundleUpHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.BundleItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.GenericContainerScreenHandler;
 import net.minecraft.screen.ShulkerBoxScreenHandler;
@@ -29,7 +26,7 @@ public class BundleKeybind {
 					&& (client.currentScreen instanceof InventoryScreen
 						|| client.player.currentScreenHandler instanceof GenericContainerScreenHandler
 						|| client.player.currentScreenHandler instanceof ShulkerBoxScreenHandler)) {
-				if (InputUtil.isKeyPressed(client.getWindow().getHandle(),
+				if (InputUtil.isKeyPressed(client.getWindow(),
 						KeyBindingHelper.getBoundKeyOf(KeybindRegistry.bundleKeybind).getCode())
 						&& !pressed) {
 					pressed = true;
@@ -43,7 +40,7 @@ public class BundleKeybind {
 					Map<Integer, Integer> spaces = BundleUpHelper.getSpaces(bundles); // slot, bundleSpace
 					Map<Integer, Integer> spaceRequirements = BundleUpHelper.getSpaceRequirements(items); // slot, spaceRequirement
 
-					if (Screen.hasShiftDown()) {
+					if (client.isShiftPressed()) {
 						sorting = ConfigManager.config.bundleSortMode == BundleUpConfig.BundleSortMode.NORMAL;
 					} else {
 						sorting = ConfigManager.config.bundleSortMode != BundleUpConfig.BundleSortMode.NORMAL;
@@ -131,7 +128,7 @@ public class BundleKeybind {
 						}
 					}
 				}
-				else if (!InputUtil.isKeyPressed(client.getWindow().getHandle(),
+				else if (!InputUtil.isKeyPressed(client.getWindow(),
 						KeyBindingHelper.getBoundKeyOf(KeybindRegistry.bundleKeybind).getCode())) {
 					pressed = false;
 				}
